@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SpaceX Starship Game</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.2/p5.min.js"></script>
+</head>
+<body>
+<script>
+let playerX, playerY;
+let asteroids = [];
+let aliens = [];
+let score = 0;
+let gameOver = false;
+
+function setup() {
+  createCanvas(windowWidth, windowHeight);
+  playerX = width / 2;
+  playerY = height - 50;
+  for (let i = 0; i < 5; i++) {
+    asteroids.push(createAsteroid());
+  }
+  if (random() < 0.3) {
+    aliens.push(createAlien());
+  }
+}
+
+function draw() {
+  background(0);
+  for (let i = 0; i < 100; i++) {
+    fill(255);
+    noStroke();
+    ellipse(random(width), random(height), 2, 2);
+  }
+
+  if (!gameOver) {
+    if (touches.length > 0) {
+      playerX = touches[0].x;
+      playerY = touches[0].y;
+    } else {
+      playerX = mouseX;
+      playerY = mouseY;
+    }
+    playerX = constrain(playerX, 20, width - 20);
+    playerY = constrain(playerY, 20, height - 20);
+
+    fill(200);
+    stroke(255);
+    beginShape();
+    vertex(playerX, playerY - 20);
+    vertex(playerX - 10, playerY + 10);
+    vertex(playerX - 15, playerY + 15);
+    vertex(playerX - 10, playerY + 10);
+    vertex(playerX + 10, playerY + 10);
+    vertex(playerX + 15, playerY + 15);
+    vertex(playerX + 10, playerY + 10);
+    endShape(CLOSE);
+    fill(255, 165, 0);
+    noStroke();
+    ellipse(playerX, playerY + 15, 10, 20);
+
+    for (let i = asteroids.length - 1; i >= 0; i--) {
+      let a = asteroids[i];
+      a.y += a.speed;
+      fill(100);
+      stroke(50);
+      beginShape();
+      for (let angle = 0; angle < TWO_PI; angle += PI / 6) {
+        let r = a.size + random(-5, 5);
+        vertex(a.x + cos(angle) * r, a.y + sin(angle) * r);
+      }
+      endShape(CLOSE);
+
+      let d = dist(playerX, playerY, a.x, a.y);
+      if (d < a.size + 10) {
+        gameOver = true;
+      }
+
+      if (a.y > height + a.size) {
+        asteroids.splice(i, 1);
+        asteroids.push(createAsteroid());
+        if (random() < 0.1) {
+          aliens.push(createAlien());
+        }
+      }
+    }
+
+    for (let i = aliens.length - 1; i >= 0; i--) {
+      let a = aliens[i];
+      a.x += a.speed;
+      a.y += a.ySpeed; // Added downward movement
+      if (a.x < a.size || a.x > width - a.size) {
+        a.speed *= -1;
+      }
+      fill(0, 255, 0);
+      stroke(0);
+      ellipse(a.x, a.y, a.size * 2, a.size);
+      fill(100, 255, 100);
+      ellipse(a.x, a.y - a.size / 2, a.size, a.size / 2);
+
+      let d = dist(playerX, playerY, a.x, a.y);
+      if (d < a.size + 10) {
+        gameOver = true;
+      }
+
+      if (a.y > height + a.size) {
+        aliens.splice(i, 1);
+      }
+    }
+
+    score += 1;
+    fill(255);
+    noStroke();
+    textSize(20);
+    textAlign(LEFT);
+    text(`Score: ${floor(score / 60)}`, 10, 30);
+  } else {
+    fill(255);
+    noStroke();
+    textSize(40);
+    textAlign(CENTER, CENTER);
+    text("Game Over", width / 2, height / 2 - 40);
+    textSize(20);
+    text(`Score: ${floor(score / 60)}`, width / 2, height / 2);
+    text("Tap to Restart", width / 2, height / 2 + 40);
+  }
+}
+
+function createAsteroid() {
+  return {
+    x: random(width),
+    y: -50,
+    size: random(20, 40),
+    speed: random(2, 5)
+  };
+}
+
+function createAlien() {
+  return {
+    x: random(width),
+    y: -50,
+    size: 20,
+    speed: random([-3, 3]),
+    ySpeed: random(1, 2)
+  };
+}
+
+function touchStarted() {
+  if (gameOver) {
+    asteroids = [];
+    aliens = [];
+    for (let i = 0; i < 5; i++) {
+      asteroids.push(createAsteroid());
+    }
+    if (random() < 0.3) {
+      aliens.push(createAlien());
+    }
+    score = 0;
+    gameOver = false;
+  }
+  return false;
+}
+
+function windowResized() {
+  resizeCanvas(windowWidth, windowHeight);
+}
+</script>
+</body>
+</html>
